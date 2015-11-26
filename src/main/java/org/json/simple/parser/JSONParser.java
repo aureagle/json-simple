@@ -30,12 +30,12 @@ public class JSONParser {
 	public static final int S_END=6;
 	public static final int S_IN_ERROR=-1;
 	
-	private LinkedList handlerStatusStack;
+	private LinkedList<Integer> handlerStatusStack;
 	private Yylex lexer = new Yylex((Reader)null);
 	private Yytoken token = null;
 	private int status = S_INIT;
 	
-	private int peekStatus(LinkedList statusStack){
+	private int peekStatus(LinkedList<Integer> statusStack){
 		if(statusStack.size()==0)
 			return -1;
 		Integer status=(Integer)statusStack.getFirst();
@@ -96,7 +96,7 @@ public class JSONParser {
 	 * Parse JSON text into java object from the input source.
 	 * 	
 	 * @param in
-     * @param containerFactory - Use this factory to createyour own JSON object and JSON array containers.
+     * @param containerFactory - Use this factory to create your own JSON object and JSON array containers.
 	 * @return Instance of the following:
 	 *  org.json.simple.JSONObject,
 	 * 	org.json.simple.JSONArray,
@@ -108,13 +108,75 @@ public class JSONParser {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public Object parse(Reader in, ContainerFactory containerFactory) throws IOException, ParseException{
+	public Object parse(Reader in, ContainerFactory containerFactory) throws IOException, ParseException {
+		return parse(in, containerFactory, true);
+	}
+	
+	public Object parseEntity(Reader in) throws IOException, ParseException{
+		return parseEntity(in, (ContainerFactory)null);
+	}
+	
+	/**
+	 * Parse JSON text into java object from the input source.
+	 * 	
+	 * @param in
+     * @param containerFactory - Use this factory to create your own JSON object and JSON array containers.
+	 * @return Instance of the following:
+	 *  org.json.simple.JSONObject,
+	 * 	org.json.simple.JSONArray,
+	 * 	java.lang.String,
+	 * 	java.lang.Number,
+	 * 	java.lang.Boolean,
+	 * 	null
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public Object parseEntity(Reader in, ContainerFactory containerFactory) throws IOException, ParseException {
+		return parse(in, containerFactory, false);
+	}
+	
+	/**
+	 * Parse JSON text into java object from the input source.
+	 * 	
+	 * @param in
+     * @param containerFactory - Use this factory to create
+     * @param readToEOF Ff true, reads to the end of file. If false, returns as soon as one object is complete. 
+     * 
+     * your own JSON object and JSON array containers.
+	 * @return Instance of the following:
+	 *  org.json.simple.JSONObject,
+	 * 	org.json.simple.JSONArray,
+	 * 	java.lang.String,
+	 * 	java.lang.Number,
+	 * 	java.lang.Boolean,
+	 * 	null
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public Object parse(Reader in, ContainerFactory containerFactory, boolean readToEOF) throws IOException, ParseException {
 		reset(in);
-		LinkedList statusStack = new LinkedList();
-		LinkedList valueStack = new LinkedList();
+		LinkedList<Integer> statusStack = new LinkedList<>();
+		LinkedList<Object> valueStack = new LinkedList<>();
+		
+		status = S_INIT;  // re-initialize
 		
 		try{
 			do{
+				
+				// if done an object, simply remove
+				if (status == S_IN_FINISHED_VALUE) {
+					// maybe check for EOF
+					if (readToEOF) {
+						nextToken();
+						if (token.type != Yytoken.TYPE_EOF ) {
+							throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
+						}
+					}
+					return valueStack.removeFirst();	
+				}
+				
 				nextToken();
 				switch(status){
 				case S_INIT:
@@ -137,14 +199,7 @@ public class JSONParser {
 					default:
 						status=S_IN_ERROR;
 					}//inner switch
-					break;
-					
-				case S_IN_FINISHED_VALUE:
-					if(token.type==Yytoken.TYPE_EOF)
-						return valueStack.removeFirst();
-					else
-						throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-					
+					break;					
 				case S_IN_OBJECT:
 					switch(token.type){
 					case Yytoken.TYPE_COMMA:
@@ -265,7 +320,7 @@ public class JSONParser {
 		throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
 	}
 	
-	private void nextToken() throws ParseException, IOException{
+	private void nextToken() throws ParseException, IOException {
 		token = lexer.yylex();
 		if(token == null)
 			token = new Yytoken(Yytoken.TYPE_EOF, null);

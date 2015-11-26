@@ -167,12 +167,12 @@ public class JSONValue {
 		}
 		
 		if(value instanceof Map){
-			JSONObject.writeJSONString((Map)value, out);
+			JSONObject.writeJSONString((Map<?, ?>)value, out);
 			return;
 		}
 		
 		if(value instanceof Collection){
-			JSONArray.writeJSONString((Collection)value, out);
+			JSONArray.writeJSONString((Collection<?>)value, out);
             return;
 		}
 		

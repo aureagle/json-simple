@@ -16,7 +16,7 @@ import java.util.Map;
  * 
  * @author FangYidong<fangyidong@yahoo.com.cn>
  */
-public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAware{
+public class JSONObject extends HashMap<String, Object> implements Map<String,Object>, JSONAware, JSONStreamAware{
 	
 	private static final long serialVersionUID = -503443796854799292L;
 	
@@ -31,8 +31,12 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
 	 * 
 	 * @param map
 	 */
-	public JSONObject(Map map) {
-		super(map);
+	public JSONObject(Map<?, ?> map) {
+		super(map.size());
+		
+		for (Map.Entry<?,?> entry : map.entrySet()) {
+			put(String.valueOf(entry.getKey()), entry.getValue());
+		}
 	}
 
 
@@ -45,14 +49,14 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
      * @param map
      * @param out
      */
-	public static void writeJSONString(Map map, Writer out) throws IOException {
+	public static void writeJSONString(Map<?,?> map, Writer out) throws IOException {
 		if(map == null){
 			out.write("null");
 			return;
 		}
 		
 		boolean first = true;
-		Iterator iter=map.entrySet().iterator();
+		Iterator<?> iter=map.entrySet().iterator();
 		
         out.write('{');
 		while(iter.hasNext()){
@@ -60,7 +64,7 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
                 first = false;
             else
                 out.write(',');
-			Map.Entry entry=(Map.Entry)iter.next();
+			Map.Entry<?,?> entry=(Map.Entry<?,?>)iter.next();
             out.write('\"');
             out.write(escape(String.valueOf(entry.getKey())));
             out.write('\"');
@@ -83,7 +87,7 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
 	 * @param map
 	 * @return JSON text, or "null" if map is null.
 	 */
-	public static String toJSONString(Map map){
+	public static String toJSONString(Map<?, ?> map){
 		final StringWriter writer = new StringWriter();
 		
 		try {
