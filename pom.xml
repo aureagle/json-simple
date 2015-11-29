@@ -23,11 +23,19 @@
             </roles>
             <timezone>+8</timezone>
         </developer>
+        <developer>
+            <id>cantonios</id>
+            <name>Antonio Sanchez</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
     </developers>
     <scm>
-        <connection>scm:svn:http://json-simple.googlecode.com/svn/trunk/</connection>
-        <developerConnection>scm:svn:http://json-simple.googlecode.com/svn/trunk/</developerConnection>
-        <url>http://json-simple.googlecode.com/svn/trunk/</url>
+        <connection>scm:git:https://github.com/cantonios/json-simple.git</connection>
+        <developerConnection>scm:git:https://github.com/cantonios/json-simple.git</developerConnection>
+        <url>https://github.com/cantonios/json-simple</url>
     </scm>
 
     <properties>
@@ -101,6 +109,30 @@
                     </goals>
                   </execution>
                 </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+
+      <profile>
+        <id>sources</id>
+        <activation>
+          <activeByDefault>false</activeByDefault>
+        </activation>
+        <build>
+          <plugins>
+            <!-- Maven Source Plugin -->
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-source-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>attach-sources</id>
+                    <goals>
+                      <goal>jar</goal>
+                    </goals>
+                </execution>
+              </executions>
             </plugin>
           </plugins>
         </build>

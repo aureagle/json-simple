@@ -24,6 +24,9 @@
 				source="1.2"/>
 	</target>
 	
+	<target name="build" depends="compile">
+	</target>
+	
 	<target name="jar" depends="compile">
 		<jar	destfile="${targetDir}/json-simple-${current-version}.jar"
 				basedir="${javaTargetDir}"
