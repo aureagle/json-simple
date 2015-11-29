@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.json.simple.parser.ContentHandler;
+import org.json.simple.parser.DefaultContentHandler;
 import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -72,11 +74,6 @@ public class JSONStreamTest {
 			return server.accept();
 		}
 
-	}
-
-	public static String getJSONSample() {
-		//return getJSONSampleLong();
-		return getJSONSampleMedium();
 	}
 	
 	public static String getJSONSampleMedium() {
@@ -220,7 +217,7 @@ public class JSONStreamTest {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(rsocket.getInputStream()));
 		PrintWriter writer = new PrintWriter(wsocket.getOutputStream());
 
-		String jsonSample = getJSONSample();
+		String jsonSample = getJSONSampleMedium();
 
 		DelayedChunkWriter chunkWriter = new DelayedChunkWriter(writer, jsonSample, 10, 10);
 		executor.execute(chunkWriter);
@@ -233,6 +230,60 @@ public class JSONStreamTest {
 		
 		Assert.assertEquals("Parsed JSON equal", reference, obj);
 
+		// close communication
+		rsocket.close();
+		wsocket.close();
+		server.close();
+	}
+	
+	@Test
+	public void testJSONMultipleStreamer() throws Exception {
+
+		ServerSocket server = new ServerSocket(0);
+		int port = server.getLocalPort();
+
+		Socket rsocket;
+		Socket wsocket;
+
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Future<Socket> ss = executor.submit(new SocketConnector(server));
+
+		wsocket = new Socket("localhost", port);
+		rsocket = ss.get();
+
+		// send message locally 
+		BufferedReader reader = new BufferedReader(new InputStreamReader(rsocket.getInputStream()));
+		PrintWriter writer = new PrintWriter(wsocket.getOutputStream());
+
+		String jsonSample = getJSONSampleMedium();
+		DelayedChunkWriter chunkWriter = new DelayedChunkWriter(writer, jsonSample, 10, 10);
+		executor.execute(chunkWriter);
+
+		JSONParser parser = new JSONParser();
+		// entire string at once
+		DefaultContentHandler handler = new DefaultContentHandler();
+		parser.parse(jsonSample, handler);
+		JSONObject reference = (JSONObject)(handler.getContent());
+		// from streaming input
+		JSONObject obj = (JSONObject)(parser.parse(reader));
+		
+		Assert.assertEquals("First parsed JSON equal", reference, obj);
+		
+		// second streamed object
+		jsonSample = getJSONSampleLong();
+		chunkWriter = new DelayedChunkWriter(writer, jsonSample, 10, 10);
+		executor.execute(chunkWriter);
+
+		// entire string at once
+		handler = new DefaultContentHandler();
+		parser.parse(jsonSample, handler);
+		reference = (JSONObject)(handler.getContent());
+		// from streaming input
+		obj = (JSONObject)(parser.parse(reader));
+
+		
+		Assert.assertEquals("Second parsed JSON equal", reference, obj);
+		
 		// close communication
 		rsocket.close();
 		wsocket.close();
