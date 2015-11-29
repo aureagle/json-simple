@@ -10,8 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.json.simple.parser.ContentHandler;
-import org.json.simple.parser.DefaultContentHandler;
 import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -255,29 +253,25 @@ public class JSONStreamTest {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(rsocket.getInputStream()));
 		PrintWriter writer = new PrintWriter(wsocket.getOutputStream());
 
-		String jsonSample = getJSONSampleMedium();
+		String jsonFirst = getJSONSampleMedium();
+		String jsonSecond = getJSONSampleLong();
+		
+		String jsonSample = jsonFirst + "\n" + jsonSecond;
 		DelayedChunkWriter chunkWriter = new DelayedChunkWriter(writer, jsonSample, 10, 10);
 		executor.execute(chunkWriter);
 
 		JSONParser parser = new JSONParser();
 		// entire string at once
-		DefaultContentHandler handler = new DefaultContentHandler();
-		parser.parse(jsonSample, handler);
-		JSONObject reference = (JSONObject)(handler.getContent());
+		JSONObject reference = (JSONObject)(parser.parse(jsonFirst));
 		// from streaming input
 		JSONObject obj = (JSONObject)(parser.parse(reader));
 		
 		Assert.assertEquals("First parsed JSON equal", reference, obj);
 		
 		// second streamed object
-		jsonSample = getJSONSampleLong();
-		chunkWriter = new DelayedChunkWriter(writer, jsonSample, 10, 10);
-		executor.execute(chunkWriter);
 
 		// entire string at once
-		handler = new DefaultContentHandler();
-		parser.parse(jsonSample, handler);
-		reference = (JSONObject)(handler.getContent());
+		reference = (JSONObject)(parser.parse(jsonSecond));
 		// from streaming input
 		obj = (JSONObject)(parser.parse(reader));
 
