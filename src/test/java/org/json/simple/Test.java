@@ -14,16 +14,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.ContentHandler;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import junit.framework.TestCase;
+
 /**
  * @author FangYidong<fangyidong@yahoo.com.cn>
  */
+@SuppressWarnings("deprecation")
 public class Test extends TestCase{
 
 	public void testDecode() throws Exception{
@@ -56,7 +57,7 @@ public class Test extends TestCase{
 		
 		s="[\"hello\\bworld\\\"abc\\tdef\\\\ghi\\rjkl\\n123\\u4e2d\"]";
 		obj=JSONValue.parse(s);
-		assertEquals("hello\bworld\"abc\tdef\\ghi\rjkl\n123中",((List)obj).get(0).toString());
+		assertEquals("hello\bworld\"abc\tdef\\ghi\rjkl\n123中",((List<?>)obj).get(0).toString());
 		
 		JSONParser parser = new JSONParser();
 		s="{\"name\":";
@@ -110,22 +111,22 @@ public class Test extends TestCase{
 		
 		s = "{\"first\": 123, \"second\": [4, 5, 6], \"third\": 789}";
 		ContainerFactory containerFactory = new ContainerFactory(){
-			public List creatArrayContainer() {
-				return new LinkedList();
+			public List<?> createArrayContainer() {
+				return new LinkedList<Object>();
 			}
 
-			public Map createObjectContainer() {
-				return new LinkedHashMap();
+			public Map<?, ?> createObjectContainer() {
+				return new LinkedHashMap<Object, Object>();
 			}
 			
 		};
 		
 		try{
-			Map json = (Map)parser.parse(s, containerFactory);
-			Iterator iter = json.entrySet().iterator();
+			Map<?, ?> json = (Map<?, ?>)parser.parse(s, containerFactory);
+			Iterator<?> iter = json.entrySet().iterator();
 			System.out.println("==iterate result==");
 			while(iter.hasNext()){
-				Map.Entry entry = (Map.Entry)iter.next();
+				Map.Entry<?,?> entry = (Map.Entry<?,?>)iter.next();
 				System.out.println(entry.getKey() + "=>" + entry.getValue());
 			}
 			
@@ -322,7 +323,7 @@ public class Test extends TestCase{
 		System.out.println();
 		assertEquals("[\"abc\\u0010a\\/\",123,222.123,true,{}]",array1.toString());
 	
-		List list = new ArrayList();
+		List<Object> list = new ArrayList<Object>();
 		list.add("abc\u0010a/");
 		list.add(new Integer(123));
 		list.add(new Double(222.123));
@@ -333,16 +334,16 @@ public class Test extends TestCase{
 		System.out.println();
 		assertEquals("[\"abc\\u0010a\\/\",123,222.123,true,null]",JSONArray.toJSONString(list));
 
-		Map map = new HashMap();
+		Map<String, List<Object>> map = new HashMap<String, List<Object>>();
 		map.put("array1",list);
 		System.out.println("======map with list===========");
 		System.out.println(map);
 		System.out.println();
 		assertEquals("{\"array1\":[\"abc\\u0010a\\/\",123,222.123,true,null]}",JSONObject.toJSONString(map));		
 		
-        Map m1 = new LinkedHashMap();
-        Map m2 = new LinkedHashMap();
-        List  l1 = new LinkedList();
+        Map<String, Object> m1 = new LinkedHashMap<String, Object>();
+        Map<String, Object> m2 = new LinkedHashMap<String, Object>();
+        List<Map<String, Object>>  l1 = new LinkedList<Map<String, Object>>();
 
         m1.put("k11","v11");
         m1.put("k12","v12");
@@ -362,8 +363,8 @@ public class Test extends TestCase{
         System.out.println(jsonString);
         assertEquals("[{\"k11\":\"v11\",\"k12\":\"v12\",\"k13\":\"v13\"},{\"k21\":\"v21\",\"k22\":\"v22\",\"k23\":\"v23\"}]", jsonString);
         
-        List l2 = new LinkedList();
-        Map m3 = new LinkedHashMap();
+        List<Object> l2 = new LinkedList<Object>();
+        Map<String,Object> m3 = new LinkedHashMap<String,Object>();
         m3.put("k31", "v3");
         m3.put("k32", new Double(123.45));
         m3.put("k33", new Boolean(false));

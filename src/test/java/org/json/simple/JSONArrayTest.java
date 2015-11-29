@@ -19,7 +19,7 @@ public class JSONArrayTest extends TestCase {
 	}
 
 	public void testJSONArrayCollection() {
-		final ArrayList testList = new ArrayList();
+		final ArrayList<String> testList = new ArrayList<String>();
 		testList.add("First item");
 		testList.add("Second item");
 		
@@ -29,7 +29,7 @@ public class JSONArrayTest extends TestCase {
 	}
 
 	public void testWriteJSONStringCollectionWriter() throws IOException, ParseException {
-		final HashSet testSet = new HashSet();
+		final HashSet<String> testSet = new HashSet<String>();
 		testSet.add("First item");
 		testSet.add("Second item");
 		
@@ -47,14 +47,15 @@ public class JSONArrayTest extends TestCase {
 	}
 
 	public void testToJSONStringCollection() throws ParseException {
-		final HashSet testSet = new HashSet();
+		final HashSet<String> testSet = new HashSet<String>();
 		testSet.add("First item");
 		testSet.add("Second item");
 		
 		final JSONArray jsonArray = new JSONArray(testSet);
 		
 		final JSONParser parser = new JSONParser();
-		final JSONArray parsedArray = (JSONArray)parser.parse(jsonArray.toJSONString());
+		String json = jsonArray.toJSONString();
+		final JSONArray parsedArray = (JSONArray)parser.parse(json);
 		
 		assertTrue(parsedArray.containsAll(jsonArray));
 		assertTrue(jsonArray.containsAll(parsedArray));

@@ -7,19 +7,16 @@ package org.json.simple.parser;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * Parser for JSON text. Please note that JSONParser is NOT thread-safe.
  * 
- * @author FangYidong<fangyidong@yahoo.com.cn>
+ * @author FangYidong<fangyidong@yahoo.com.cn>, modified by Antonio Sanchez <antonios@ece.ubc.ca>
  */
 public class JSONParser {
+
 	public static final int S_INIT = 0;
 	public static final int S_IN_FINISHED_VALUE = 1;// string,number,boolean,null,object,array
 	public static final int S_IN_OBJECT = 2;
@@ -29,15 +26,15 @@ public class JSONParser {
 	public static final int S_END = 6;
 	public static final int S_IN_ERROR = -1;
 
-	private LinkedList<Integer> handlerStatusStack;
+	private Deque<Integer> handlerStatusStack;
 	private Yylex lexer = new Yylex((Reader) null);
 	private Yytoken token = null;
 	private int status = S_INIT;
 
-	private int peekStatus(LinkedList<Integer> statusStack) {
+	private int peekStatus(Deque<Integer> statusStack) {
 		if (statusStack.size() == 0)
 			return -1;
-		Integer status = (Integer) statusStack.getFirst();
+		Integer status = (Integer) statusStack.peek();
 		return status.intValue();
 	}
 
@@ -74,13 +71,10 @@ public class JSONParser {
 
 	/**
 	 * Parse JSON text into java object from the input source, continuously reading until
-	 * the end of the String
+	 * the end of the String.
 	 * 
 	 * @param in
-	 * @param containerFactory
-	 *            - Use this factory to create
-	 * 
-	 *            your own JSON object and JSON array containers.
+
 	 * @return Instance of the following: org.json.simple.JSONObject,
 	 *         org.json.simple.JSONArray, java.lang.String, java.lang.Number,
 	 *         java.lang.Boolean, null
@@ -89,39 +83,31 @@ public class JSONParser {
 	 * @throws ParseException
 	 */
 	public Object parse(String s) throws ParseException {
-		return parse(s, (ContainerFactory) null);
+		DefaultContentHandler handler = new DefaultContentHandler();
+		parse(s, handler);
+		return handler.getContent();
 	}
 
 	/**
-	 * Parse JSON text into java object from the input source, continuously reading until
-	 * the end of the String
+	 * Parse JSON text into java object from the input source.
 	 * 
 	 * @param in
-	 * @param containerFactory
-	 *            - Use this factory to create
+	 * @param ContentHandler delegate responsible for assembling each component
 	 * 
-	 *            your own JSON object and JSON array containers.
-	 * @return Instance of the following: org.json.simple.JSONObject,
-	 *         org.json.simple.JSONArray, java.lang.String, java.lang.Number,
-	 *         java.lang.Boolean, null
-	 * 
-	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public Object parse(String s, ContainerFactory containerFactory) throws ParseException {
+	public void parse(String s, ContentHandler handler) throws ParseException {
 		StringReader in = new StringReader(s);
 		try {
-			return parse(in, containerFactory);
+			parse(in, handler);
 		} catch (IOException ie) {
-			/*
-			 * Actually it will never happen.
-			 */
 			throw new ParseException(-1, ParseException.ERROR_UNEXPECTED_EXCEPTION, ie);
 		}
 	}
 
 	/**
-	 * Parse JSON text into java object from the input source, continuously reading until EOF
+	 * Parse JSON text into java object from the input source.  Reads
+	 * until end of the next JSON object, array, or value
 	 * 
 	 * @param in
 	 * @return Instance of the following: org.json.simple.JSONObject,
@@ -132,276 +118,45 @@ public class JSONParser {
 	 * @throws ParseException
 	 */
 	public Object parse(Reader in) throws IOException, ParseException {
-		return parse(in, (ContainerFactory) null);
+		DefaultContentHandler handler = new DefaultContentHandler();
+		parse(in, handler);
+		return handler.getContent();
 	}
 
 	/**
 	 * Parse JSON text into java object from the input source.
 	 * 
 	 * @param in
-	 * @param containerFactory
-	 *            - Use this factory to create your own JSON object and JSON
-	 *            array containers.
-	 * @return Instance of the following: org.json.simple.JSONObject,
-	 *         org.json.simple.JSONArray, java.lang.String, java.lang.Number,
-	 *         java.lang.Boolean, null
+	 * @param contentHandler handler for constructing JSON objects
 	 * 
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public Object parse(Reader in, ContainerFactory containerFactory) throws IOException, ParseException {
-		return parse(in, containerFactory, true);
+	public void parse(Reader in, ContentHandler contentHandler) throws IOException, ParseException {
+		parse(in, contentHandler, false);
 	}
-
-	/**
-	 * Parses a single entity from the reader
-	 * 
-	 * @param in
-	 *            input reader
-	 * @return the parsed entity, instance of the following:
-	 *         org.json.simple.JSONObject, org.json.simple.JSONArray,
-	 *         java.lang.String, java.lang.Number, java.lang.Boolean, null
-	 * 
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public Object parseEntity(Reader in) throws IOException, ParseException {
-		return parseEntity(in, (ContainerFactory) null);
-	}
-
-	/**
-	 * Parses a single entity from the reader
-	 * 
-	 * @param in
-	 *            input reader
-	 * @param containerFactory
-	 *            - Use this factory to create your own JSON object and JSON
-	 *            array containers.
-	 * @return the parsed entity, instance of the following:
-	 *         org.json.simple.JSONObject, org.json.simple.JSONArray,
-	 *         java.lang.String, java.lang.Number, java.lang.Boolean, null
-	 * 
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public Object parseEntity(Reader in, ContainerFactory containerFactory) throws IOException, ParseException {
-		return parse(in, containerFactory, false);
-	}
-
-	/**
-	 * Parse JSON text into java object from the input source, continuously reading until EOF
-	 * 
-	 * @param in
-	 * @param containerFactory
-	 *            - Use this factory to create
-	 * @param readToEOF
-	 *            Ff true, reads to the end of file. If false, returns as soon
-	 *            as one object is complete.
-	 * 
-	 *            your own JSON object and JSON array containers.
-	 * @return Instance of the following: org.json.simple.JSONObject,
-	 *         org.json.simple.JSONArray, java.lang.String, java.lang.Number,
-	 *         java.lang.Boolean, null
-	 * 
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public Object parse(Reader in, ContainerFactory containerFactory, boolean readToEOF)
-			throws IOException, ParseException {
-		reset(in);
-		LinkedList<Integer> statusStack = new LinkedList<>();
-		LinkedList<Object> valueStack = new LinkedList<>();
-
-		status = S_INIT; // re-initialize
-
-		try {
-			do {
-
-				// if done an object, simply remove
-				if (status == S_IN_FINISHED_VALUE) {
-					// maybe check for EOF
-					if (readToEOF) {
-						nextToken();
-						if (token.type != Yytoken.TYPE_EOF) {
-							throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-						}
-					}
-					return valueStack.removeFirst();
-				}
-
-				nextToken();
-				switch (status) {
-				case S_INIT:
-					switch (token.type) {
-					case Yytoken.TYPE_VALUE:
-						status = S_IN_FINISHED_VALUE;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(token.value);
-						break;
-					case Yytoken.TYPE_LEFT_BRACE:
-						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(createObjectContainer(containerFactory));
-						break;
-					case Yytoken.TYPE_LEFT_SQUARE:
-						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(createArrayContainer(containerFactory));
-						break;
-					default:
-						status = S_IN_ERROR;
-					}// inner switch
-					break;
-				case S_IN_OBJECT:
-					switch (token.type) {
-					case Yytoken.TYPE_COMMA:
-						break;
-					case Yytoken.TYPE_VALUE:
-						if (token.value instanceof String) {
-							String key = (String) token.value;
-							valueStack.addFirst(key);
-							status = S_PASSED_PAIR_KEY;
-							statusStack.addFirst(new Integer(status));
-						} else {
-							status = S_IN_ERROR;
-						}
-						break;
-					case Yytoken.TYPE_RIGHT_BRACE:
-						if (valueStack.size() > 1) {
-							statusStack.removeFirst();
-							valueStack.removeFirst();
-							status = peekStatus(statusStack);
-						} else {
-							status = S_IN_FINISHED_VALUE;
-						}
-						break;
-					default:
-						status = S_IN_ERROR;
-						break;
-					}// inner switch
-					break;
-
-				case S_PASSED_PAIR_KEY:
-					switch (token.type) {
-					case Yytoken.TYPE_COLON:
-						break;
-					case Yytoken.TYPE_VALUE:
-						statusStack.removeFirst();
-						String key = (String) valueStack.removeFirst();
-						Map parent = (Map) valueStack.getFirst();
-						parent.put(key, token.value);
-						status = peekStatus(statusStack);
-						break;
-					case Yytoken.TYPE_LEFT_SQUARE:
-						statusStack.removeFirst();
-						key = (String) valueStack.removeFirst();
-						parent = (Map) valueStack.getFirst();
-						List newArray = createArrayContainer(containerFactory);
-						parent.put(key, newArray);
-						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(newArray);
-						break;
-					case Yytoken.TYPE_LEFT_BRACE:
-						statusStack.removeFirst();
-						key = (String) valueStack.removeFirst();
-						parent = (Map) valueStack.getFirst();
-						Map newObject = createObjectContainer(containerFactory);
-						parent.put(key, newObject);
-						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(newObject);
-						break;
-					default:
-						status = S_IN_ERROR;
-					}
-					break;
-
-				case S_IN_ARRAY:
-					switch (token.type) {
-					case Yytoken.TYPE_COMMA:
-						break;
-					case Yytoken.TYPE_VALUE:
-						List val = (List) valueStack.getFirst();
-						val.add(token.value);
-						break;
-					case Yytoken.TYPE_RIGHT_SQUARE:
-						if (valueStack.size() > 1) {
-							statusStack.removeFirst();
-							valueStack.removeFirst();
-							status = peekStatus(statusStack);
-						} else {
-							status = S_IN_FINISHED_VALUE;
-						}
-						break;
-					case Yytoken.TYPE_LEFT_BRACE:
-						val = (List) valueStack.getFirst();
-						Map newObject = createObjectContainer(containerFactory);
-						val.add(newObject);
-						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(newObject);
-						break;
-					case Yytoken.TYPE_LEFT_SQUARE:
-						val = (List) valueStack.getFirst();
-						List newArray = createArrayContainer(containerFactory);
-						val.add(newArray);
-						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
-						valueStack.addFirst(newArray);
-						break;
-					default:
-						status = S_IN_ERROR;
-					}// inner switch
-					break;
-				case S_IN_ERROR:
-					throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-				}// switch
-				if (status == S_IN_ERROR) {
-					throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-				}
-			} while (token.type != Yytoken.TYPE_EOF);
-		} catch (IOException ie) {
-			throw ie;
-		}
-
-		throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-	}
-
+	
 	private void nextToken() throws ParseException, IOException {
 		token = lexer.yylex();
-		if (token == null)
+		if (token == null) {
 			token = new Yytoken(Yytoken.TYPE_EOF, null);
+		}
 	}
 
-	private Map createObjectContainer(ContainerFactory containerFactory) {
-		if (containerFactory == null)
-			return new JSONObject();
-		Map m = containerFactory.createObjectContainer();
-
-		if (m == null)
-			return new JSONObject();
-		return m;
-	}
-
-	private List createArrayContainer(ContainerFactory containerFactory) {
-		if (containerFactory == null)
-			return new JSONArray();
-		List l = containerFactory.creatArrayContainer();
-
-		if (l == null)
-			return new JSONArray();
-		return l;
-	}
-
-	public void parse(String s, ContentHandler contentHandler) throws ParseException {
-		parse(s, contentHandler, false);
-	}
-
-	public void parse(String s, ContentHandler contentHandler, boolean isResume) throws ParseException {
+	/**
+	 * Parse JSON text into java object from the input source.
+	 * 
+	 * @param in
+	 * @param contentHandler handler for constructing JSON objects
+	 * @param resume resume from previous stream
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public void parse(String s, ContentHandler contentHandler, boolean resume) throws ParseException {
 		StringReader in = new StringReader(s);
 		try {
-			parse(in, contentHandler, isResume);
+			parse(in, contentHandler, resume);
 		} catch (IOException ie) {
 			/*
 			 * Actually it will never happen.
@@ -409,9 +164,40 @@ public class JSONParser {
 			throw new ParseException(-1, ParseException.ERROR_UNEXPECTED_EXCEPTION, ie);
 		}
 	}
-
-	public void parse(Reader in, ContentHandler contentHandler) throws IOException, ParseException {
-		parse(in, contentHandler, false);
+	
+	/**
+	 * Parse JSON text into java object from the input source.
+	 * 
+	 * @param in
+	 * @param ContainerFactory delegate responsible for creating containers
+	 * 
+	 * @throws ParseException
+	 */
+	@Deprecated
+	public Object parse(String s, ContainerFactory factory) throws ParseException {
+		StringReader in = new StringReader(s);
+		try {
+			return parse(in, factory);
+		} catch (IOException ie) {
+			throw new ParseException(-1, ParseException.ERROR_UNEXPECTED_EXCEPTION, ie);
+		}
+	}
+	
+	/**
+	 * Parse JSON text into java object from the input source.  Reads
+	 * until end of the next JSON object, array, or value
+	 * 
+	 * @param in
+	 * @param factory factory for constructing JSON containers
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	@Deprecated
+	public Object parse(Reader in, ContainerFactory factory) throws IOException, ParseException {
+		ContainerContentHandler handler = new ContainerContentHandler(factory);
+		parse(in, handler, false);
+		return handler.getContent();
 	}
 
 	/**
@@ -431,62 +217,58 @@ public class JSONParser {
 	 * @throws ParseException
 	 */
 	public void parse(Reader in, ContentHandler contentHandler, boolean isResume) throws IOException, ParseException {
+		
+		if (handlerStatusStack == null) {
+			isResume = false;
+		}
+		
 		if (!isResume) {
 			reset(in);
-			handlerStatusStack = new LinkedList();
-		} else {
-			if (handlerStatusStack == null) {
-				isResume = false;
-				reset(in);
-				handlerStatusStack = new LinkedList();
-			}
+			handlerStatusStack = new ArrayDeque<Integer>();
 		}
 
-		LinkedList statusStack = handlerStatusStack;
+		Deque<Integer> statusStack = handlerStatusStack;
 
 		try {
 			do {
+
 				switch (status) {
 				case S_INIT:
+					// we are in "root" (no object)
 					contentHandler.startJSON();
 					nextToken();
 					switch (token.type) {
 					case Yytoken.TYPE_VALUE:
 						status = S_IN_FINISHED_VALUE;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.primitive(token.value))
 							return;
 						break;
 					case Yytoken.TYPE_LEFT_BRACE:
 						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startObject())
 							return;
 						break;
 					case Yytoken.TYPE_LEFT_SQUARE:
 						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startArray())
 							return;
 						break;
+					case Yytoken.TYPE_EOF:
+						// nothing but end parsing
+						// stay in S_INIT
+						contentHandler.endJSON();
+						return;
 					default:
 						status = S_IN_ERROR;
 					}// inner switch
 					break;
 
-				case S_IN_FINISHED_VALUE:
-					nextToken();
-					if (token.type == Yytoken.TYPE_EOF) {
-						contentHandler.endJSON();
-						status = S_END;
-						return;
-					} else {
-						status = S_IN_ERROR;
-						throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
-					}
-
 				case S_IN_OBJECT:
 					nextToken();
+					// must be a string (key) or comma or close brace
 					switch (token.type) {
 					case Yytoken.TYPE_COMMA:
 						break;
@@ -494,7 +276,7 @@ public class JSONParser {
 						if (token.value instanceof String) {
 							String key = (String) token.value;
 							status = S_PASSED_PAIR_KEY;
-							statusStack.addFirst(new Integer(status));
+							statusStack.push(status);
 							if (!contentHandler.startObjectEntry(key))
 								return;
 						} else {
@@ -503,27 +285,28 @@ public class JSONParser {
 						break;
 					case Yytoken.TYPE_RIGHT_BRACE:
 						if (statusStack.size() > 1) {
-							statusStack.removeFirst();
+							statusStack.pop();
 							status = peekStatus(statusStack);
+							if (!contentHandler.endObject())
+								return;
 						} else {
 							status = S_IN_FINISHED_VALUE;
 						}
-						if (!contentHandler.endObject())
-							return;
 						break;
 					default:
 						status = S_IN_ERROR;
 						break;
 					}// inner switch
 					break;
-
+					
 				case S_PASSED_PAIR_KEY:
 					nextToken();
+					// must be a colon then value/array/object
 					switch (token.type) {
 					case Yytoken.TYPE_COLON:
 						break;
 					case Yytoken.TYPE_VALUE:
-						statusStack.removeFirst();
+						statusStack.pop();
 						status = peekStatus(statusStack);
 						if (!contentHandler.primitive(token.value))
 							return;
@@ -531,18 +314,18 @@ public class JSONParser {
 							return;
 						break;
 					case Yytoken.TYPE_LEFT_SQUARE:
-						statusStack.removeFirst();
-						statusStack.addFirst(new Integer(S_IN_PAIR_VALUE));
+						statusStack.pop();
+						statusStack.push(S_IN_PAIR_VALUE);
 						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startArray())
 							return;
 						break;
 					case Yytoken.TYPE_LEFT_BRACE:
-						statusStack.removeFirst();
-						statusStack.addFirst(new Integer(S_IN_PAIR_VALUE));
+						statusStack.pop();
+						statusStack.push(S_IN_PAIR_VALUE);
 						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startObject())
 							return;
 						break;
@@ -554,10 +337,10 @@ public class JSONParser {
 				case S_IN_PAIR_VALUE:
 					/*
 					 * S_IN_PAIR_VALUE is just a marker to indicate the end of
-					 * an object entry, it doesn't proccess any token, therefore
+					 * an object entry, it doesn't process any token, therefore
 					 * delay consuming token until next round.
 					 */
-					statusStack.removeFirst();
+					statusStack.pop();
 					status = peekStatus(statusStack);
 					if (!contentHandler.endObjectEntry())
 						return;
@@ -574,7 +357,7 @@ public class JSONParser {
 						break;
 					case Yytoken.TYPE_RIGHT_SQUARE:
 						if (statusStack.size() > 1) {
-							statusStack.removeFirst();
+							statusStack.pop();
 							status = peekStatus(statusStack);
 						} else {
 							status = S_IN_FINISHED_VALUE;
@@ -584,13 +367,13 @@ public class JSONParser {
 						break;
 					case Yytoken.TYPE_LEFT_BRACE:
 						status = S_IN_OBJECT;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startObject())
 							return;
 						break;
 					case Yytoken.TYPE_LEFT_SQUARE:
 						status = S_IN_ARRAY;
-						statusStack.addFirst(new Integer(status));
+						statusStack.push(status);
 						if (!contentHandler.startArray())
 							return;
 						break;
@@ -598,7 +381,19 @@ public class JSONParser {
 						status = S_IN_ERROR;
 					}// inner switch
 					break;
-
+					
+				case S_IN_FINISHED_VALUE:
+					nextToken();
+					if (token.type == Yytoken.TYPE_EOF) {
+						contentHandler.endJSON();
+						status = S_END;
+						return;
+					} else {
+						status = S_IN_ERROR;
+						throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
+					}
+					// break;
+					
 				case S_END:
 					return;
 
