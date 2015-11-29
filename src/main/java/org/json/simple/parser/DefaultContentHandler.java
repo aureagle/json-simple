@@ -43,8 +43,8 @@ public class DefaultContentHandler implements ContentHandler {
 
 	@Override
 	public void endJSON() throws ParseException, IOException {
-		containerStack.pop();
-		if (containerStack.peek() != ContainerType.ROOT) {
+		ContainerType c = containerStack.pop();
+		if (c != ContainerType.ROOT) {
 			throw new IOException("JSON ended but not in root container");
 		}
 	}

@@ -284,14 +284,15 @@ public class JSONParser {
 						}
 						break;
 					case Yytoken.TYPE_RIGHT_BRACE:
-						if (statusStack.size() > 1) {
-							statusStack.pop();
-							status = peekStatus(statusStack);
-							if (!contentHandler.endObject())
-								return;
+						
+						statusStack.pop();
+						if (statusStack.size() > 0) {
+								status = peekStatus(statusStack);
 						} else {
 							status = S_IN_FINISHED_VALUE;
 						}
+						if (!contentHandler.endObject())
+							return;
 						break;
 					default:
 						status = S_IN_ERROR;
