@@ -17,6 +17,9 @@ public class DefaultContentHandler implements ContentHandler {
 		ARRAY
 	}
 	
+	// special identifier for null value to allow it to be added to the stack
+	static final Object NULL_VALUE = new Object();
+	
 	ArrayDeque<Object> valueStack;
 	ArrayDeque<ContainerType> containerStack;
 	
@@ -24,10 +27,15 @@ public class DefaultContentHandler implements ContentHandler {
 	}
 	
 	public Object getContent() {
+	    Object val = null;
 		if (valueStack.size() > 0) {
-			return valueStack.pop();
+		    val = valueStack.pop();
+		    if (val == NULL_VALUE) {
+		        return null;
+		    }
+		    
 		}
-		return null;
+		return val;
 	}
 	
 	public int getContentSize() {
@@ -113,6 +121,9 @@ public class DefaultContentHandler implements ContentHandler {
 		}
 		
 		Object value = valueStack.pop();
+		if (value == NULL_VALUE) {
+		    value = null;
+		}
 		String key = (String) valueStack.pop();
 		@SuppressWarnings("rawtypes")
 		// XXX raw types unavoidable do to the way ContainerFactory is currently written
@@ -167,6 +178,9 @@ public class DefaultContentHandler implements ContentHandler {
 			List array = (List) (valueStack.peek());
 			array.add(value);
 		} else {
+		    if (value == null) {
+		        value = NULL_VALUE;
+		    }
 			valueStack.push(value);
 		}
 		

@@ -25,9 +25,9 @@ import junit.framework.TestCase;
  * @author FangYidong<fangyidong@yahoo.com.cn>
  */
 @SuppressWarnings("deprecation")
-public class Test extends TestCase{
+public class Test extends TestCase {
 
-	public void testDecode() throws Exception{
+	public void testDecode() throws Exception {
 		System.out.println("=======decode=======");
 		
 		String s="[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
@@ -192,7 +192,7 @@ public class Test extends TestCase{
 			pe.printStackTrace();
 		}
         
-        class KeyFinder implements ContentHandler{
+        class KeyFinder implements ContentHandler {
             private Object value;
             private boolean found = false;
             private boolean end = false;
