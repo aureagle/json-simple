@@ -1,12 +1,9 @@
 package org.json.simple;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import org.junit.Assert;
-import org.junit.Test;
+
 import junit.framework.TestCase;
 
 public class JSONEmptyAndNullTest extends TestCase {

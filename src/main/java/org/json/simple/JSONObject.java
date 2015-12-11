@@ -122,7 +122,7 @@ public class JSONObject extends HashMap<String, Object> implements Map<String,Ob
 	}
 	
 	/**
-	 * Escape quotes, \, /, \r, \n, \b, \f, \t and other control characters (U+0000 through U+001F).
+	 * Escape quotes, \, \r, \n, \b, \f, \t and other control characters (U+0000 through U+001F).
 	 * It's the same as JSONValue.escape() only for compatibility here.
 	 * 
 	 * @see org.json.simple.JSONValue#escape(String)

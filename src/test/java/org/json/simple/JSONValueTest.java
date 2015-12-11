@@ -3,6 +3,9 @@ package org.json.simple;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import junit.framework.TestCase;
 
 public class JSONValueTest extends TestCase {
@@ -252,5 +255,14 @@ public class JSONValueTest extends TestCase {
 		writer = new StringWriter();
 		JSONValue.writeJSONString(nestedStringArray, writer);
 		assertEquals(expectedNestedStringString, writer.toString());
+	}
+	
+	public void testUrl() throws ParseException {
+	    String jsonString = "{\"url\": \"http://www.testthis.com/hello/world/slash.html\"}";
+	    JSONObject jobj = new JSONObject();
+	    jobj.put("url", "http://www.testthis.com/hello/world/slash.html");
+	    JSONParser parser = new JSONParser();
+	    Object obj = parser.parse(jsonString); 
+	    assertEquals(jobj, obj);
 	}
 }
