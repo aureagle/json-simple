@@ -31,6 +31,14 @@
             </roles>
             <timezone>-8</timezone>
         </developer>
+        <developer>
+        	<id>aureagle</id>
+        	<name>Aurangzeb Alamgeer</name>
+        	<roles>
+        		<role>developer</role>
+        	</roles>
+        	<timezone>+5</timezone>
+        </developer>
     </developers>
     <scm>
         <connection>scm:git:https://github.com/cantonios/json-simple.git</connection>
