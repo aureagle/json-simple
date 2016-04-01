@@ -10,6 +10,9 @@ import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 /**
  * Parser for JSON text. Please note that JSONParser is NOT thread-safe.
  * 
@@ -86,6 +89,38 @@ public class JSONParser {
 		DefaultContentHandler handler = new DefaultContentHandler();
 		parse(s, handler);
 		return handler.getContent();
+	}
+	
+	/**
+	 * Parse JSON Text into JSONObject from the input source, continuously reading until
+	 * the end of the string
+	 * 
+	 * @param in
+	 * 
+	 * @return Instance of JSONObject
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	
+	public JSONObject parseToJSONObject( String s ) throws ParseException {
+		return (JSONObject) this.parse(s);
+	}
+	
+	/**
+	 * Parse JSON Text into JSONObject from the input source, continuously reading until
+	 * the end of the string
+	 * 
+	 * @param in
+	 * 
+	 * @return Instance of JSONObject
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	
+	public JSONArray parseToJSONArray( String s ) throws ParseException {
+		return (JSONArray) this.parse(s);
 	}
 
 	/**

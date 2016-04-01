@@ -133,4 +133,12 @@ public class JSONObject extends HashMap<String, Object> implements Map<String,Ob
 	public static String escape(String s){
 		return JSONValue.escape(s);
 	}
+	
+	public JSONObject getJSONObject( Object key ) {
+		return (JSONObject) this.get(key);
+	}
+	
+	public JSONArray getJSONArray( Object key ) {
+		return (JSONArray) this.get(key);
+	}
 }

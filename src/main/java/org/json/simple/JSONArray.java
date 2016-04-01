@@ -378,4 +378,12 @@ public class JSONArray extends ArrayList<Object> implements JSONAware, JSONStrea
 	public String toString() {
 		return toJSONString();
 	}
+	
+	public JSONArray getJSONArray( int index) {
+		return (JSONArray) this.get(index);
+	}
+	
+	public JSONObject getJSONObject( int index ) {
+		return (JSONObject) this.get(index);
+	}
 }
