@@ -1,8 +1,8 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.googlecode.json-simple</groupId>
+    <groupId>com.pastefs.libs</groupId>
     <artifactId>json-simple</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging><!--previous:bundle-->
     <name>JSON.simple</name>
     <version>1.1.2</version>
     <description>A simple Java toolkit for JSON</description>
@@ -41,9 +41,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:https://github.com/cantonios/json-simple.git</connection>
-        <developerConnection>scm:git:https://github.com/cantonios/json-simple.git</developerConnection>
-        <url>https://github.com/cantonios/json-simple</url>
+        <connection>scm:git:https://github.com/aureagle/json-simple.git</connection>
+        <developerConnection>scm:git:https://github.com/aureagle/json-simple.git</developerConnection>
+        <url>https://github.com/aureagle/json-simple</url>
     </scm>
 
     <properties>
