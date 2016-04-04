@@ -94,6 +94,7 @@ public class JSONParser {
 	/**
 	 * Parse JSON Text into JSONObject from the input source, continuously reading until
 	 * the end of the string
+	 * @author Aurangzeb <aureagle@gmail.com>
 	 * 
 	 * @param in
 	 * 
@@ -110,6 +111,7 @@ public class JSONParser {
 	/**
 	 * Parse JSON Text into JSONObject from the input source, continuously reading until
 	 * the end of the string
+	 * @author Aurangzeb <aureagle@gmail.com>
 	 * 
 	 * @param in
 	 * 
@@ -139,7 +141,7 @@ public class JSONParser {
 			throw new ParseException(-1, ParseException.ERROR_UNEXPECTED_EXCEPTION, ie);
 		}
 	}
-
+	
 	/**
 	 * Parse JSON text into java object from the input source.  Reads
 	 * until end of the next JSON object, array, or value
@@ -156,6 +158,36 @@ public class JSONParser {
 		DefaultContentHandler handler = new DefaultContentHandler();
 		parse(in, handler);
 		return handler.getContent();
+	}
+	
+	/**
+	 * Parse JSON text into java object from the input source.  Reads
+	 * until end of the next JSON object, array, or value
+	 * @author Aurangzeb <aureagle@gmail.com>
+	 * 
+	 * @param in
+	 * @return Instance of the following: org.json.simple.JSONObject
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public JSONObject parseToJSONObject( Reader in ) throws IOException, ParseException {
+			return (JSONObject) this.parse(in);
+	}
+	
+	/**
+	 * Parse JSON text into java object from the input source.  Reads
+	 * until end of the next JSON object, array, or value
+	 * @author Aurangzeb <aureagle@gmail.com>
+	 * 
+	 * @param in
+	 * @return Instance of the following: org.json.simple.JSONArray
+	 * 
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public JSONArray parseToJSONArray( Reader in ) throws IOException, ParseException {
+		return (JSONArray) this.parse(in);
 	}
 
 	/**
